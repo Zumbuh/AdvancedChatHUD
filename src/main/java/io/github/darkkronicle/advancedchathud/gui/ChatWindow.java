@@ -31,8 +31,8 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.sound.PositionedSoundInstance;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
@@ -253,9 +253,9 @@ public class ChatWindow {
     private int getPaddedLeftX() {
         return (getLeftX()
                 + (int)
-                        Math.ceil(
-                                HudConfigStorage.General.LEFT_PAD.config.getIntegerValue()
-                                        + (renderRight ? 0 : headOffset())));
+                Math.ceil(
+                        HudConfigStorage.General.LEFT_PAD.config.getIntegerValue()
+                                + (renderRight ? 0 : headOffset())));
     }
 
     private double getScale() {
@@ -478,6 +478,7 @@ public class ChatWindow {
             RenderUtils.color(1, 1, 1, 1);
             RenderUtils.bindTexture(X_ICON);
             context.drawTexture(
+                    RenderLayer::getGuiTextured,
                     X_ICON,
                     rightX - scaledBar + 1,
                     getActualY(newY - 1),
@@ -494,6 +495,7 @@ public class ChatWindow {
             RenderUtils.color(1, 1, 1, 1);
             RenderUtils.bindTexture(RESIZE_ICON);
             context.drawTexture(
+                    RenderLayer::getGuiTextured,
                     RESIZE_ICON,
                     rightX - scaledBar * 2 + 2,
                     getActualY(newY - 1),
@@ -509,6 +511,7 @@ public class ChatWindow {
             // Visibility
             RenderUtils.bindTexture(visibility.getTexture());
             context.drawTexture(
+                    RenderLayer::getGuiTextured,
                     visibility.getTexture(),
                     rightX - scaledBar * 3 + 3,
                     getActualY(newY - 1),
@@ -609,10 +612,10 @@ public class ChatWindow {
             applied =
                     1
                             - (float)
-                                    ((EasingMethod)
-                                                    HudConfigStorage.General.FADE_TYPE.config
-                                                            .getOptionListValue())
-                                            .apply(percent);
+                            ((EasingMethod)
+                                    HudConfigStorage.General.FADE_TYPE.config
+                                            .getOptionListValue())
+                                    .apply(percent);
             applied = Math.max(0, applied);
             if (applied <= 0) {
                 return;
@@ -642,7 +645,7 @@ public class ChatWindow {
 
         if (!focused
                 && HudConfigStorage.General.HUD_LINE_TYPE.config.getOptionListValue()
-                        == HudConfigStorage.HudLineType.COMPACT) {
+                == HudConfigStorage.HudLineType.COMPACT) {
             backgroundWidth = lineWidth + headOffset();
         } else {
             backgroundWidth = scaledWidth;
@@ -673,10 +676,10 @@ public class ChatWindow {
                 headX = pLX - 10;
             }
             int headY = getActualY(y);
-            context.drawTexture(
-                    line.getParent().getOwner().getTexture(), headX, headY, 8, 8, 8, 8, 8, 8, 64, 64);
-            context.drawTexture(
-                    line.getParent().getOwner().getTexture(), headX, headY, 8, 8, 40, 8, 8, 8, 64, 64);
+            context.drawTexture(RenderLayer::getGuiTextured, line.getParent().getOwner().getTexture(),
+                    headX, headY, 8, 8, 8, 8, 8, 8, 64, 64);
+            context.drawTexture(RenderLayer::getGuiTextured, line.getParent().getOwner().getTexture(),
+                    headX, headY, 8, 8, 40, 8, 8, 8, 64, 64);
             RenderSystem.setShaderColor(1, 1, 1, 1);
         }
         context.drawTextWithShadow(
@@ -722,9 +725,9 @@ public class ChatWindow {
 
                 if (trueY <= y.getValue()
                         && trueY
-                                >= y.getValue()
-                                        - HudConfigStorage.General.LINE_SPACE.config
-                                                .getIntegerValue()) {
+                        >= y.getValue()
+                                - HudConfigStorage.General.LINE_SPACE.config
+                                        .getIntegerValue()) {
                     ChatMessage.AdvancedChatLine line = message.getLines().get(i);
                     double truestX = trueX;
                     if (renderRight) {
@@ -741,9 +744,9 @@ public class ChatWindow {
                     break;
                 }
                 if (!y.isPossible(
-                                HudConfigStorage.General.LINE_SPACE.config.getIntegerValue()
-                                        + HudConfigStorage.General.MESSAGE_SPACE.config
-                                                .getIntegerValue())
+                        HudConfigStorage.General.LINE_SPACE.config.getIntegerValue()
+                                + HudConfigStorage.General.MESSAGE_SPACE.config
+                                        .getIntegerValue())
                         || !y.incrementIfPossible(
                                 HudConfigStorage.General.MESSAGE_SPACE.config.getIntegerValue())) {
                     break;
