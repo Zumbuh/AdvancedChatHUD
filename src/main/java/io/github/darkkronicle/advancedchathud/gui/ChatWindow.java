@@ -8,7 +8,10 @@
 package io.github.darkkronicle.advancedchathud.gui;
 
 import com.google.gson.JsonObject;
+import com.mojang.blaze3d.opengl.GlConst;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.GpuTexture;
 import fi.dy.masa.malilib.render.RenderUtils;
 import fi.dy.masa.malilib.util.StringUtils;
 import io.github.darkkronicle.advancedchatcore.chat.ChatMessage;
@@ -30,6 +33,7 @@ import lombok.Setter;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.sound.PositionedSoundInstance;
@@ -469,7 +473,7 @@ public class ChatWindow {
 
             // Close
             RenderUtils.color(1, 1, 1, 1);
-            RenderUtils.bindTexture(X_ICON);
+            RenderSystem.setShaderTexture(0, MinecraftClient.getInstance().getTextureManager().getTexture(X_ICON).getGlTexture());
             context.drawTexture(
                     RenderLayer::getGuiTextured,
                     X_ICON,
@@ -486,7 +490,7 @@ public class ChatWindow {
 
             // Resize
             RenderUtils.color(1, 1, 1, 1);
-            RenderUtils.bindTexture(RESIZE_ICON);
+            RenderSystem.setShaderTexture(0, MinecraftClient.getInstance().getTextureManager().getTexture(RESIZE_ICON).getGlTexture());
             context.drawTexture(
                     RenderLayer::getGuiTextured,
                     RESIZE_ICON,
@@ -502,7 +506,6 @@ public class ChatWindow {
                     32);
 
             // Visibility
-            RenderUtils.bindTexture(visibility.getTexture());
             context.drawTexture(
                     RenderLayer::getGuiTextured,
                     visibility.getTexture(),
@@ -515,7 +518,8 @@ public class ChatWindow {
                     32,
                     32,
                     32,
-                    32);
+                    32
+            );
 
             double mouseX = client.mouse.getX() / 2;
             double mouseY = client.mouse.getY() / 2;
@@ -658,10 +662,16 @@ public class ChatWindow {
                 && line.getParent().getOwner() != null
                 && HudConfigStorage.General.CHAT_HEADS.config.getBooleanValue()) {
             // Allow head to be transparent
-            RenderUtils.setupBlend();
+            GlStateManager._enableBlend();
+            GlStateManager._blendFuncSeparate(
+                    GlConst.GL_SRC_ALPHA,
+                    GlConst.GL_ONE_MINUS_SRC_ALPHA,
+                    GlConst.GL_ONE,
+                    GlConst.GL_ONE_MINUS_SRC_ALPHA
+            );
             // Draw head
             RenderSystem.setShaderColor(1, 1, 1, applied);
-            RenderSystem.setShaderTexture(0, line.getParent().getOwner().getTexture());
+            RenderSystem.setShaderTexture(0,MinecraftClient.getInstance().getTextureManager().getTexture(line.getParent().getOwner().getTexture()).getGlTexture());
             int headX;
             if (renderRight) {
                 headX = pRX + 2;
