@@ -12,6 +12,7 @@ import com.mojang.blaze3d.opengl.GlConst;
 import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import fi.dy.masa.malilib.render.RenderUtils;
 import fi.dy.masa.malilib.util.StringUtils;
 import io.github.darkkronicle.advancedchatcore.chat.ChatMessage;
@@ -37,12 +38,15 @@ import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.sound.PositionedSoundInstance;
+import net.minecraft.client.texture.AbstractTexture;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
+import org.joml.Matrix3x2fStack;
 
 @Environment(EnvType.CLIENT)
 public class ChatWindow {
@@ -324,9 +328,8 @@ public class ChatWindow {
         if (scrolledHeight > totalHeight) {
             scrolledHeight = totalHeight;
         }
-
-        context.getMatrices().push();
-        context.getMatrices().scale((float) getScale(), (float) getScale(), 1);
+        context.getMatrices().pushMatrix();
+        context.getMatrices().scale((float) getScale(), (float) getScale());
 
         int lines = 0;
         int currentHeight = 0;
@@ -472,10 +475,9 @@ public class ChatWindow {
                     tab.getBorderColor().color());
 
             // Close
-            RenderUtils.color(1, 1, 1, 1);
-            RenderSystem.setShaderTexture(0, MinecraftClient.getInstance().getTextureManager().getTexture(X_ICON).getGlTexture());
+            // RenderUtils.color(1, 1, 1, 1);
             context.drawTexture(
-                    RenderLayer::getGuiTextured,
+                    RenderPipelines.GUI_TEXTURED,
                     X_ICON,
                     rightX - scaledBar + 1,
                     getActualY(newY - 1),
@@ -489,10 +491,9 @@ public class ChatWindow {
                     32);
 
             // Resize
-            RenderUtils.color(1, 1, 1, 1);
-            RenderSystem.setShaderTexture(0, MinecraftClient.getInstance().getTextureManager().getTexture(RESIZE_ICON).getGlTexture());
+            // RenderUtils.color(1, 1, 1, 1);
             context.drawTexture(
-                    RenderLayer::getGuiTextured,
+                    RenderPipelines.GUI_TEXTURED,
                     RESIZE_ICON,
                     rightX - scaledBar * 2 + 2,
                     getActualY(newY - 1),
@@ -507,7 +508,7 @@ public class ChatWindow {
 
             // Visibility
             context.drawTexture(
-                    RenderLayer::getGuiTextured,
+                    RenderPipelines.GUI_TEXTURED,
                     visibility.getTexture(),
                     rightX - scaledBar * 3 + 3,
                     getActualY(newY - 1),
@@ -555,7 +556,7 @@ public class ChatWindow {
                     10,
                     Colors.getInstance().getColorOrWhite("white").color());
         }
-        context.getMatrices().pop();
+        context.getMatrices().popMatrix();
     }
 
     private void drawLine(
@@ -670,20 +671,23 @@ public class ChatWindow {
                     GlConst.GL_ONE_MINUS_SRC_ALPHA
             );
             // Draw head
-            RenderSystem.setShaderColor(1, 1, 1, applied);
-            RenderSystem.setShaderTexture(0,MinecraftClient.getInstance().getTextureManager().getTexture(line.getParent().getOwner().getTexture()).getGlTexture());
-            int headX;
+            // RenderSystem.setShaderColor(1, 1, 1, applied);
+            Identifier textureId = line.getParent().getOwner().getTexture();
+            AbstractTexture tex = MinecraftClient.getInstance().getTextureManager().getTexture(textureId);
+            GpuTextureView view = tex.getGlTextureView();
+            if (view == null) {
+                view = RenderSystem.getDevice().createTextureView(tex.getGlTexture());
+            }
+            RenderSystem.setShaderTexture(0, view);int headX;
             if (renderRight) {
                 headX = pRX + 2;
             } else {
                 headX = pLX - 10;
             }
             int headY = getActualY(y);
-            context.drawTexture(RenderLayer::getGuiTextured, line.getParent().getOwner().getTexture(),
-                    headX, headY, 8, 8, 8, 8, 8, 8, 64, 64);
-            context.drawTexture(RenderLayer::getGuiTextured, line.getParent().getOwner().getTexture(),
-                    headX, headY, 8, 8, 40, 8, 8, 8, 64, 64);
-            RenderSystem.setShaderColor(1, 1, 1, 1);
+            context.drawTexture(RenderPipelines.GUI_TEXTURED, textureId, headX, headY, 8, 8, 8, 8, 64, 64);
+            context.drawTexture(RenderPipelines.GUI_TEXTURED, textureId, headX, headY, 40, 8, 8, 8, 64, 64);
+            // RenderSystem.setShaderColor(1, 1, 1, 1);
         }
         context.drawTextWithShadow(
                 client.textRenderer, render.asOrderedText(), renderRight ? pRX - lineWidth : pLX, getActualY(y) + 1, text.color());
