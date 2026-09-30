@@ -7,6 +7,8 @@
  */
 package io.github.darkkronicle.advancedchathud.gui;
 
+import io.github.darkkronicle.advancedchatcore.util.CursorUtil;
+import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import fi.dy.masa.malilib.render.RenderUtils;
 import fi.dy.masa.malilib.util.StringUtils;
 import io.github.darkkronicle.advancedchatcore.gui.CleanButton;
@@ -15,11 +17,12 @@ import io.github.darkkronicle.advancedchatcore.util.Colors;
 import io.github.darkkronicle.advancedchatcore.util.TextUtil;
 import io.github.darkkronicle.advancedchathud.config.HudConfigStorage;
 import io.github.darkkronicle.advancedchathud.itf.IChatHud;
+import net.minecraft.client.input.MouseButtonEvent;
+import fi.dy.masa.malilib.render.GuiContext;
 import io.github.darkkronicle.advancedchathud.tabs.AbstractChatTab;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.sound.PositionedSoundInstance;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.sound.SoundEvents;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.sounds.SoundEvents;
 
 public class TabButton extends CleanButton {
 
@@ -37,10 +40,13 @@ public class TabButton extends CleanButton {
     }
 
     @Override
-    public void render(int mouseX, int mouseY, boolean unused, DrawContext context) {
+    public void render(GuiContext context, int mouseX, int mouseY, boolean unused) {
         int relMX = mouseX - x;
         int relMY = mouseY - y;
         hovered = relMX >= 0 && relMX <= width && relMY >= 0 && relMY <= height;
+        if (hovered) {
+            CursorUtil.requestCursor(context, CursorTypes.POINTING_HAND);
+        }
         Color color = baseColor;
         if (hovered) {
             color = Colors.getInstance().getColorOrWhite("hover").withAlpha(color.alpha());
@@ -59,7 +65,7 @@ public class TabButton extends CleanButton {
             color = new Color(color.red() / 2, color.green() / 2, color.blue() / 2, 100);
         }
 
-        RenderUtils.drawRect(x, y, width, height, color.color());
+        RenderUtils.drawRect(context, x, y, width, height, color.color());
 
         drawStringWithShadow(
                 context,
@@ -81,10 +87,10 @@ public class TabButton extends CleanButton {
     }
 
     @Override
-    protected boolean onMouseClickedImpl(int mouseX, int mouseY, int mouseButton) {
+    protected boolean onMouseClickedImpl(MouseButtonEvent click, boolean doubleClick) {
         this.mc
                 .getSoundManager()
-                .play(PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                .play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
         WindowManager.getInstance().onTabButton(tab);
         return true;
     }

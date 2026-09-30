@@ -15,6 +15,7 @@ import fi.dy.masa.malilib.gui.button.ButtonGeneric;
 import fi.dy.masa.malilib.gui.button.IButtonActionListener;
 import fi.dy.masa.malilib.util.GuiUtils;
 import fi.dy.masa.malilib.util.KeyCodes;
+import net.minecraft.client.input.KeyEvent;
 import fi.dy.masa.malilib.util.StringUtils;
 import io.github.darkkronicle.advancedchatcore.config.SaveableConfig;
 import io.github.darkkronicle.advancedchatcore.gui.buttons.BackButtonListener;
@@ -25,7 +26,7 @@ import io.github.darkkronicle.advancedchathud.AdvancedChatHud;
 import io.github.darkkronicle.advancedchathud.config.ChatTab;
 import java.util.ArrayList;
 import java.util.List;
-import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screens.Screen;
 
 public class GuiTabEditor extends GuiConfigsBase implements IClosable {
 
@@ -92,9 +93,9 @@ public class GuiTabEditor extends GuiConfigsBase implements IClosable {
     }
 
     @Override
-    public void close() {
+    public void onClose() {
         save();
-        super.close();
+        super.onClose();
     }
 
     @Override
@@ -109,17 +110,17 @@ public class GuiTabEditor extends GuiConfigsBase implements IClosable {
     }
 
     @Override
-    public boolean onKeyTyped(int keyCode, int scanCode, int modifiers) {
+    public boolean onKeyTyped(KeyEvent input) {
         // Override so that on escape stuff still gets saved
         if (this.activeKeybindButton != null) {
-            this.activeKeybindButton.onKeyPressed(keyCode);
+            this.activeKeybindButton.onKeyPressed(input.key());
             return true;
         } else {
-            if (this.getListWidget().onKeyTyped(keyCode, scanCode, modifiers)) {
+            if (this.getListWidget().onKeyTyped(input)) {
                 return true;
             }
 
-            if (keyCode == KeyCodes.KEY_ESCAPE
+            if (input.key() == KeyCodes.KEY_ESCAPE
                     && this.getParent() != GuiUtils.getCurrentScreen()) {
                 // Make sure to save
                 closeGui(true);
